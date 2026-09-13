@@ -1,30 +1,30 @@
-# 🎛️📏 Potentiometer → TN TN Speed Control
+# 🎛️🔊 Potentiometer → TN TN Speed Control
 
 في هذا المشروع سنستخدم **Potentiometer** للتحكم في سرعة تكرار صوت:
 
 🔊 **TN TN**
 
-ويتم استخدام **Ultrasonic Sensor** لاكتشاف الجسم القريب.
-
-كلما تغيّرت قيمة الـ Potentiometer، تتغير سرعة تكرار صوت **TN TN**.
+يقوم Arduino بقراءة قيمة الـ Potentiometer وإرسالها إلى الحاسوب عبر **Serial**، ثم يمكن لبرنامج Python استخدام هذه القيمة للتحكم في سرعة صوت **TN TN**.
 
 ---
 
 ## 🎯 فكرة المشروع
 
-```text id="7m1bqk"
+```text
 🎛️ Potentiometer
        ↓
-  التحكم في السرعة
+   Arduino A0
        ↓
-📏 Ultrasonic Sensor
+   قراءة القيمة
        ↓
-  جسم قريب < 50 cm
+ Serial Communication
        ↓
-💻 Python
+   💻 Python
        ↓
-🔊 TN TN
+ 🔊 TN TN
 ```
+
+كلما قمنا بتدوير الـ Potentiometer، تتغير القيمة المرسلة إلى الحاسوب، وبالتالي يمكن تغيير سرعة صوت **TN TN**.
 
 ---
 
@@ -32,7 +32,6 @@
 
 * Arduino Uno 🤖
 * Potentiometer 10kΩ 🎛️
-* Ultrasonic Sensor HC-SR04 📏
 * Breadboard
 * Jumper Wires
 * USB Cable
@@ -44,54 +43,65 @@
 
 ## 🔌 التوصيل
 
-### Potentiometer
-
 | Potentiometer | Arduino |
 | ------------- | ------- |
 | الطرف الأول   | 5V      |
 | الطرف الأوسط  | A0      |
 | الطرف الثالث  | GND     |
 
-### Ultrasonic Sensor
-
-| HC-SR04 | Arduino |
-| ------- | ------- |
-| VCC     | 5V      |
-| GND     | GND     |
-| TRIG    | Pin 10  |
-| ECHO    | Pin 11  |
-
 ---
 
-## 💻 الفكرة البرمجية
-
-يقرأ Arduino قيمة الـ Potentiometer:
+## 💻 كود Arduino
 
 ```cpp
-int value = analogRead(A0);
+int potPin = A0;
+
+void setup()
+{
+  Serial.begin(9600);
+}
+
+void loop()
+{
+  int potValue = analogRead(potPin);
+
+  Serial.println(potValue);
+
+  delay(30);
+}
 ```
-
-ثم تُستخدم هذه القيمة للتحكم في **delay** أو سرعة إرسال إشارة الصوت.
-
-عندما تكون المسافة أقل من:
-
-```text id="m5m6js"
-50 cm
-```
-
-يرسل Arduino إشارة إلى الحاسوب.
-
-يقوم برنامج Python باستقبال الإشارة وتشغيل صوت **TN TN**.
 
 ---
 
-## 🎛️ التحكم في السرعة
+## 🧠 كيف يعمل الكود؟
 
-يمكن للـ Potentiometer التحكم في سرعة تكرار الصوت.
+يقرأ Arduino قيمة الـ Potentiometer باستخدام:
+
+```cpp
+analogRead(potPin);
+```
+
+القيمة تكون بين:
+
+```text
+0 → 1023
+```
+
+ثم يرسل Arduino القيمة إلى الحاسوب عبر:
+
+```cpp
+Serial.println(potValue);
+```
+
+---
+
+## 🎛️ التحكم في سرعة TN TN
+
+يستقبل برنامج Python قيمة الـ Potentiometer ويستخدمها للتحكم في سرعة تكرار الصوت.
 
 مثال:
 
-```text id="j9u5q3"
+```text
 🎛️ قيمة منخفضة
       ↓
 🔊 TN ... TN ... TN
@@ -105,17 +115,17 @@ int value = analogRead(A0);
 🔊 TN TN TN TN
 ```
 
-كلما تغيّرت قيمة الـ Potentiometer، تتغير مدة الانتظار بين الإشارات.
+يمكن لبرنامج Python تحويل قيمة الـ Potentiometer إلى **وقت انتظار (delay)** مناسب بين أصوات TN.
 
 ---
 
 ## 🐍 Python
 
-يتم استخدام Python للتواصل مع Arduino عبر **Serial** وتشغيل الملف الصوتي عند وصول إشارة التنبيه.
+يستقبل Python القيم القادمة من Arduino عبر **Serial** ويستخدمها للتحكم في سرعة تشغيل صوت **TN TN**.
 
-يمكن وضع ملف الصوت داخل المشروع، مثل:
+ملف الصوت يمكن أن يكون مثل:
 
-```text id="v4n0kg"
+```text
 tn.mp3
 ```
 
@@ -126,12 +136,11 @@ tn.mp3
 من خلال هذا المشروع تعلمنا:
 
 * 🎛️ استخدام Potentiometer
-* 📏 استخدام Ultrasonic Sensor
-* 🔢 قراءة القيم التناظرية
-* ⏱️ التحكم في السرعة باستخدام `delay`
-* 💻 التواصل بين Arduino وPython
-* 🔊 تشغيل صوت TN TN
-* 🧠 الجمع بين أكثر من مكوّن في مشروع واحد
+* 🔢 قراءة Analog Value
+* 💻 إرسال البيانات عبر Serial
+* 🐍 التواصل بين Arduino وPython
+* ⏱️ التحكم في سرعة الصوت
+* 🔊 إنشاء تأثير TN TN بسرعات مختلفة
 
 ---
 
